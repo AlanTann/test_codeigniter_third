@@ -1,25 +1,32 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+<?php if (! defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
+include_once './vendor/autoload.php';
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
 
-class Welcome extends CI_Controller {
+class Welcome extends CI_Controller
+{
+    public function index()
+    {
+        $connection = new AMQPStreamConnection('localhost', 5672, 'guest', 'guest');
+        $channel = $connection->channel();
+        $channel->queue_declare('hello', false, false, false, false);
+        $channel->exchange_declare('my_app', 'direct', false, false, false);
 
-	/**
-	 * Index Page for this controller.
-	 *
-	 * Maps to the following URL
-	 * 		http://example.com/index.php/welcome
-	 *	- or -
-	 * 		http://example.com/index.php/welcome/index
-	 *	- or -
-	 * Since this controller is set as the default controller in
-	 * config/routes.php, it's displayed at http://example.com/
-	 *
-	 * So any other public methods not prefixed with an underscore will
-	 * map to /index.php/welcome/<method_name>
-	 * @see https://codeigniter.com/user_guide/general/urls.html
-	 */
-	public function index()
-	{
-		$this->load->view('welcome_message');
-	}
+        $data = "Hi, i just sent msg !";
+        $msg = new \PhpAmqpLib\Message\AMQPMessage(
+            json_encode(array('userId'=>'22', 'msg'=>'success')),
+            array(
+                    'delivery_mode' => 2,
+                    'content_type' => 'application/json',
+                )
+        );
+
+        $channel->basic_publish($msg, 'my_app', 'user777');
+        echo " [x] Sent 'Hello World!'\n";
+        $channel->close();
+        $connection->close();
+        $this->load->view('welcome_message');
+    }
 }
