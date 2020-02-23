@@ -1,3 +1,9 @@
+*********
+Purpose
+*********
+This is to test codeigniter(3.0).
+
+
 ###################
 What is CodeIgniter
 ###################
